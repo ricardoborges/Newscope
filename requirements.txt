@@ -4,3 +4,4 @@ python-dotenv
 firebase-admin
 python-telegram-bot 
 schedule
+cloudscraper
