@@ -1,4 +1,4 @@
-from google import genai
+import google.generativeai as genai 
 import json
 from llm.prompt_builder import PromptBuilder
 from dotenv import load_dotenv
@@ -6,13 +6,14 @@ import os
 
 class GeminiClient:
     def __init__(self):
-        """Initialize the GeminiClient with API key from environment variables."""
+
         load_dotenv()
         api_key = os.getenv("GEMINI_API_KEY")
         if not api_key:
             raise ValueError("GEMINI_API_KEY not found in environment variables")
-        
-        self.client = genai.Client(api_key=api_key)
+
+        genai.configure(api_key=api_key)
+        self.model = genai.GenerativeModel("gemini-2.0-flash")
         self.prompt_builder = PromptBuilder()
 
     def generate_response(self, content, prompt_type="criminal_news"):
