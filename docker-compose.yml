@@ -1,0 +1,11 @@
+services:
+  newscope:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: newscope-instance
+    restart: always
+    environment:
+      - TZ=America/Bahia
+    volumes:
+      - /etc/localtime:/etc/localtime:ro    
