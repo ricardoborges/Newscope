@@ -6,6 +6,7 @@ from repository.users_repository import UsersRepository
 from telegram import Update
 from telegram.ext import (
     ContextTypes,
+    CallbackContext,
 )
 
 from services.telegram import Telegram
@@ -15,12 +16,13 @@ logger = logging.getLogger(__name__)
 class NewsBot:
     def __init__(self, telegram_token: str):
         self.telegram = Telegram(token=telegram_token)
+        self.telegram_token = telegram_token
         self.news_repository = FirebaseNewsRepository()
         self.users_repository = UsersRepository()
         self.collector = NewsCollector(self.news_repository)
 
     async def start_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
-        """Handle /start command - register user"""
+        """Handle /start command - register user or update 'feed' to True."""
         chat_id = update.effective_chat.id
         if not self.users_repository.user_exists(chat_id):
             self.users_repository.save_user(chat_id)
@@ -30,11 +32,13 @@ class NewsBot:
             )
             logger.info(f"New user registered: {chat_id}")
         else:
+            # Update 'feed' to True for existing users
+            self.users_repository.sair_user(chat_id, extra={'feed': True})
             await context.bot.send_message(
                 chat_id=chat_id, 
-                text="Você já está registrado para receber atualizações de notícias."
+                text="Você foi reativado para receber atualizações de notícias."
             )
-            logger.info(f"Existing user connected: {chat_id}")
+            logger.info(f"User reactivated: {chat_id}")
 
     async def today_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Handle /hoje command - send today's news"""
@@ -56,6 +60,9 @@ class NewsBot:
                 chat_id=chat_id, 
                 text="Não há notícias para hoje ainda."
             )
+
+    async def feed(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        self.collect_and_send_news()
         
     def send_news_to(self, chat_id, news_item):
         """Send a news item to a specific user."""
@@ -88,3 +95,9 @@ class NewsBot:
             logger.info("News collection and distribution completed")
         except Exception as e:
             logger.error(f"Error in collect_and_send_news: {str(e)}")
+
+    def sair_command(self, update: Update, context: CallbackContext) -> None:
+        """Handle the /sair command to stop sending news to the user."""
+        chat_id = update.effective_chat.id
+        self.users_repository.sair_user(chat_id)
+        update.message.reply_text("Você não receberá mais notícias. Para voltar, use o comando /feed.")

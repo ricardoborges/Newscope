@@ -3,6 +3,7 @@ import time
 import schedule
 import logging
 import threading
+import datetime
 from dotenv import load_dotenv
 from newsbot import NewsBot
 
@@ -38,7 +39,7 @@ def run_scheduler():
             time.sleep(60)  # Wait before retry
 
 def schedule_collect():
-    """Function called by scheduler to collect and send news"""
+    global news_bot
     logger.info("Running scheduled news collection")
     news_bot.collect_and_send_news()
         
@@ -57,9 +58,18 @@ def main():
     # Add command handlers
     application.add_handler(CommandHandler("start", news_bot.start_command))
     application.add_handler(CommandHandler("hoje", news_bot.today_command))
+    application.add_handler(CommandHandler("sair", news_bot.sair_command))
+    application.add_handler(CommandHandler("feed", news_bot.feed))
 
     # Schedule tasks
-    schedule.every().day.at("20:03").do(schedule_collect)
+    #schedule.every().day.at("12:08").do(schedule_collect)
+
+    #for hour in range(7, 22):
+    #    schedule.every().day.at(f"{hour:02d}:00").do(schedule_collect)
+    #    schedule.every().day.at(f"{hour:02d}:30").do(schedule_collect)
+
+
+
     # For testing, uncomment to run every 5 minutes
     # schedule.every(5).minutes.do(schedule_collect)
   
